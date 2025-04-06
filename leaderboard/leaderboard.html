@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anomaly Detection Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --background-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --hover-shadow: 0 8px 20px rgba(67, 97, 238, 0.15);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-gradient);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            padding-top: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .header h1 {
+            font-weight: 600;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        .dataset-title {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-top: -0.5rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        /* 选项卡样式 */
+        .table-header-control {
+            margin: 0 0 0 0;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .metric-switch {
+            gap: 0;
+            border-bottom: 2px solid #dee2e6;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            top: 2px;
+        }
+
+        .metric-btn {
+            border: none;
+            border-radius: 4px 4px 0 0;
+            padding: 0.6rem 1.8rem;
+            background: #f8f9fa;
+            color: #6c757d;
+            margin-right: 0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            border-bottom: none;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .metric-btn:hover {
+            background: #e9ecef;
+            color: var(--primary-color);
+        }
+
+        .metric-btn.active-metric {
+            background: white;
+            color: var(--primary-color);
+            border-color: #dee2e6;
+            border-bottom: 4px solid var(--primary-color);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.1);
+            z-index: 1;
+        }
+
+        /* 表格容器 */
+        .table-wrapper {
+            background: white;
+            border-radius: 0 15px 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        thead th {
+            border: none;
+            padding: 1.2rem;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        thead th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        th.sortable::after {
+            content: '↕';
+            margin-left: 8px;
+            font-size: 0.8em;
+            opacity: 0.6;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        th.sorted-asc::after {
+            content: '↑';
+            transform: translateY(-2px);
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: '↓';
+            transform: translateY(2px);
+            opacity: 1;
+        }
+
+        tbody tr {
+            background: white;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        tbody tr:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        tbody td {
+            padding: 1.2rem;
+            vertical-align: middle;
+            border-top: none;
+            position: relative;
+        }
+
+        /* 排名样式 */
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4895ef 0%, #4361ee 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(45deg, #ffd700, #c5a600);
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(45deg, #c0c0c0, #8a8a8a);
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(45deg, #cd7f32, #a6691e);
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .table-wrapper {
+                padding: 0.5rem;
+                border-radius: 0 10px 10px 10px;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            thead th {
+                padding: 0.8rem;
+            }
+            
+            tbody td {
+                padding: 0.8rem;
+            }
+            
+            .metric-btn {
+                padding: 0.5rem 1.2rem;
+                font-size: 0.85rem;
+            }
+
+            .rank-badge {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">Trace Anomaly Detection Leaderboard</h1>
+        <div class="dataset-title">
+            Benchmark on <span class="highlight"> pu_data_part </span>
+        </div>
+
+        <div class="table-header-control">
+            <div class="metric-switch">
+                <button class="btn metric-btn active-metric" data-metric="total">
+                    Total
+                </button>
+                <button class="btn metric-btn" data-metric="structure">
+                    Structure
+                </button>
+                <button class="btn metric-btn" data-metric="latency">
+                    Latency
+                </button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Rank</th>
+                        <th class="sortable" data-sort="name">Algorithm</th>
+                        <th class="sortable" data-sort="precision">Precision</th>
+                        <th class="sortable" data-sort="recall">Recall</th>
+                        <th class="sortable sorted-desc" data-sort="f1">F1-score</th>
+                        <th class="sortable" data-sort="accuracy">Accuracy</th>
+                        <th class="sortable" data-sort="time">Time(s)</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const algorithms = [
+    {
+        "name": "TraceAnomaly",
+        "total": {
+            "precision": 0.9995,
+            "recall": 0.4552,
+            "f1": 0.6255,
+            "accuracy": 0.8205,
+            "time": 98
+        },
+        "structure": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 98
+        },
+        "latency": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 98
+        }
+    },
+    {
+        "name": "CRISP",
+        "total": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 99
+        },
+        "structure": {
+            "precision": 0.393,
+            "recall": 0.9438,
+            "f1": 0.5549,
+            "accuracy": 0.9055,
+            "time": 99
+        },
+        "latency": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 99
+        }
+    },
+    {
+        "name": "TraceCRL",
+        "total": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 3610.013389825821
+        },
+        "structure": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 3610.013389825821
+        },
+        "latency": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 3610.013389825821
+        }
+    },
+    {
+        "name": "PUTraceAD",
+        "total": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 71
+        },
+        "structure": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 71
+        },
+        "latency": {
+            "precision": 0,
+            "recall": 0,
+            "f1": 0,
+            "accuracy": 0,
+            "time": 71
+        }
+    }
+];
+
+        let currentMetric = 'total';
+        let sortKey = 'f1';
+        let sortDirection = -1;
+        const tbody = document.getElementById('results-body');
+
+        // 初始化表格行
+        algorithms.forEach((algo, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="rank-badge">${index + 1}</span></td>
+                <td>${algo.name}</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0%</td>
+                <td>0.0</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // 添加选项卡切换时重置排序的逻辑
+        function resetSorting() {
+            sortKey = 'f1';
+            sortDirection = -1;
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+                if (header.dataset.sort === 'f1') {
+                    header.classList.add('sorted-desc');
+                }
+            });
+        }
+
+        // 修改后的选项卡点击处理
+        document.querySelectorAll('.metric-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.metric-btn').forEach(btn => 
+                    btn.classList.remove('active-metric'));
+                button.classList.add('active-metric');
+                currentMetric = button.dataset.metric;
+                resetSorting();  // 新增重置排序
+                updateTable();
+            });
+        });
+
+        function updateRankStyles() {
+            const badges = tbody.querySelectorAll('.rank-badge');
+            badges.forEach((badge, index) => {
+                badge.className = 'rank-badge';
+                if (index === 0) badge.classList.add('gold');
+                else if (index === 1) badge.classList.add('silver');
+                else if (index === 2) badge.classList.add('bronze');
+            });
+        }
+
+        function sortData() {
+            return [...algorithms].sort((a, b) => {
+                let valA, valB;
+                
+                if (sortKey === 'name') {
+                    // 处理名称排序
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                    return valA.localeCompare(valB) * sortDirection;
+                } else {
+                    // 处理数值排序
+                    valA = a[currentMetric][sortKey] || 0;
+                    valB = b[currentMetric][sortKey] || 0;
+                    return (valB - valA) * sortDirection;
+                }
+            });
+        }
+
+        function updateTable() {
+            const sorted = sortData();
+            const rows = tbody.getElementsByTagName('tr');
+            
+            sorted.forEach((algo, index) => {
+                const cells = rows[index].cells;
+                const metric = algo[currentMetric];
+                
+                cells[0].firstElementChild.textContent = index + 1;
+                cells[1].textContent = algo.name;
+                cells[2].textContent = `${(metric.precision * 100).toFixed(1)}%`;
+                cells[3].textContent = `${(metric.recall * 100).toFixed(1)}%`;
+                cells[4].textContent = `${(metric.f1 * 100).toFixed(1)}%`;
+                cells[5].textContent = `${(metric.accuracy * 100).toFixed(1)}%`;
+                cells[6].textContent = metric.time.toFixed(1);
+            });
+            
+            updateRankStyles();
+        }
+
+        // 事件监听
+        document.querySelectorAll('th.sortable').forEach(header => {
+            header.addEventListener('click', () => {
+                const newSortKey = header.dataset.sort;
+                const wasActive = header.classList.contains('sorted-asc') || header.classList.contains('sorted-desc');
+                
+                document.querySelectorAll('th').forEach(th => {
+                    th.classList.remove('sorted-asc', 'sorted-desc');
+                });
+
+                if (newSortKey === sortKey && wasActive) {
+                    sortDirection *= -1;
+                } else {
+                    sortKey = newSortKey;
+                    // 名称排序默认按升序
+                    sortDirection = newSortKey === 'name' ? 1 : -1;
+                }
+
+                header.classList.add(sortDirection === 1 ? 'sorted-asc' : 'sorted-desc');
+                updateTable();
+            });
+        });
+
+        // 初始化
+        updateTable();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+-f https://data.dgl.ai/wheels/repo.html
+dgl-cu116

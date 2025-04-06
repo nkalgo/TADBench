@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ page_title or 'Trace Graph' }}</title>
+    <style>
+      html, body {
+        width: 100%;
+        overflow-x: hidden;
+      }
+      #trace-graph-wrapper {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .trace-graph, .trace-graph-anomaly, .trace-graph-anomaly-drop, .trace-graph-anomaly-latency {
+        margin: 10px;
+        width: {{ graph_size[0] }}px;
+        height: {{ graph_size[1] }}px;
+      }
+      .trace-graph {
+        border: 1px solid #333;
+      }
+      .trace-graph-anomaly {
+        border: 2px solid purple;
+      }
+      .trace-graph-anomaly-drop {
+        border: 2px solid red;
+      }
+      .trace-graph-anomaly-latency {
+        border: 2px solid darkorange;
+      }
+    </style>
+{% if echarts %}
+    <script type="text/javascript">{{ echarts | safe }}</script>
+{% else %}
+    <script type="text/javascript" src="{{ cdn or 'https://cdn.staticfile.org/echarts/5.2.2/echarts.min.js' }}"></script>
+{% endif %}
+  </head>
+  <body>
+    <!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+    <div id="trace-graph-wrapper"
+         style="display: flex; justify-content: center; flex-wrap: wrap;">
+    </div>
+    <script type="text/javascript">
+      (function() {
+        var tooltipFmt = function(params) {
+          if (params.dataType == 'edge') {
+            return params.data.source + ' > ' + params.data.target;
+            return '';
+          } else {
+            return (
+              params.marker +
+              params.name +
+              '<br /><strong>' +
+              params.value[0] +
+              '</strong><br /><strong>' +
+              params.value[1] +
+              '</strong>'
+            );
+          }
+        }
+        var d = {{ data_json | safe }};
+        var traceGraphWrapper = document.getElementById("trace-graph-wrapper")
+        for (var i=0; i<d.length; ++i) {
+          var g = d[i]
+          if (g) {
+            // change tooltip formatter
+            for (var j=0; j<g.series.length; ++j) {
+              g.series[j].tooltip.formatter = tooltipFmt;
+            }
+
+            // create the graph
+            var chartDom = document.createElement('div');
+            if (g.graphData && g.graphData.is_anomaly) {
+              var suffix = g.graphData.anomaly_type ? '-' + g.graphData.anomaly_type : '';
+              chartDom.classList.add('trace-graph-anomaly' + suffix);
+            } else {
+              chartDom.classList.add('trace-graph');
+            }
+            traceGraphWrapper.appendChild(chartDom);
+            var chart = echarts.init(chartDom);
+            chart.setOption(g)
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
