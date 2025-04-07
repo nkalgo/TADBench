@@ -1,4 +1,6 @@
 # GTrace
+The code is sourced from https://github.com/NetManAIOps/GTrace
+
 Code and dataset for GTrace.
 
 ## Evaluation of Accuracy
