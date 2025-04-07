@@ -1,4 +1,6 @@
 # TraceVAE
+The code is sourced from https://github.com/NetManAIOps/TraceVAE
+
 This is the source code for "Unsupervised Anomaly Detection on Microservice Traces through Graph VAE".
 
 ## Usage
@@ -11,12 +13,8 @@ python3 -m tracegnn.cli.data_process preprocess -i sample_dataset -o sample_data
 3. Train the model with `bash train.sh [dataset_path]`:
 ```
 bash train.sh sample_dataset
-
-bash train.sh data/data1
 ```
 4. Evaluate the model with `bash teset.sh [model_path] [dataset_path]`. The default model path is under `results/train/models/final.pt`:
 ```
 bash test.sh results/train/models/final.pt sample_dataset
-
-bash test.sh results/train/models/final.pt data/data1
 ```
